@@ -59,4 +59,14 @@ public class RecyclerViewBindings {
         }
         recyclerView.setAdapter(adapter);
     }
+
+    @SuppressWarnings("unchecked")
+    @BindingAdapter("adapter")
+    public static <T> void setAdapter(RecyclerView recyclerView, BindingRecyclerViewAdapter<T> adapter) {
+        recyclerView.setAdapter(adapter);
+        ClickHandler<T> clickHandler = (ClickHandler<T>) recyclerView.getTag(KEY_CLICK_HANDLER);
+        if (clickHandler != null) {
+            adapter.setClickHandler(clickHandler);
+        }
+    }
 }
