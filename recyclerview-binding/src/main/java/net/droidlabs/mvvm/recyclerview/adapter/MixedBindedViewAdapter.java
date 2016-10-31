@@ -32,7 +32,7 @@ public class MixedBindedViewAdapter<T>  extends BindingRecyclerViewAdapter<T> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder viewHolder, int position) {
+    public final void onBindViewHolder(ViewHolder viewHolder, int position) {
         if (isMixedItem(position)) {
             viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
                 @Override
@@ -40,21 +40,14 @@ public class MixedBindedViewAdapter<T>  extends BindingRecyclerViewAdapter<T> {
                     mixedHandler.onClick(v);
                 }
             });
+            onBindMixedViewHolder(viewHolder, position);
         } else {
             super.onBindViewHolder(viewHolder, position);
         }
     }
 
-    @Override
-    protected void bindView(View root, T item, int position) {
-        if (isMixedItem(position)) {
-            assignItem(root, null);
-            root.setOnClickListener(mixedHandler);
-            root.setOnLongClickListener(null);
-        } else {
-            super.bindView(root, item, position);
-        }
-
+    protected void onBindMixedViewHolder(ViewHolder viewHolder, int position) {
+        // noting by default
     }
 
     @Override

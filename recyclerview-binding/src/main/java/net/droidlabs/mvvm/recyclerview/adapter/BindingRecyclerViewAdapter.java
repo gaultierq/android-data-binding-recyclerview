@@ -81,18 +81,11 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         final T item = position < items.size() ? items.get(position) : null;
         viewHolder.binding.setVariable(itemBinder.getBindingVariable(item), item);
-        bindView(viewHolder.binding.getRoot(), item, position);
-        viewHolder.binding.executePendingBindings();
-    }
-
-    protected void bindView(View root, T item, int position) {
-        assignItem(root, item);
+        View root = viewHolder.binding.getRoot();
+        root.setTag(ITEM_MODEL, item);
         root.setOnClickListener(this);
         root.setOnLongClickListener(this);
-    }
-
-    protected void assignItem(View root, T item) {
-        root.setTag(ITEM_MODEL, item);
+        viewHolder.binding.executePendingBindings();
     }
 
     @Override
@@ -124,18 +117,19 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
     }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
-        final ViewDataBinding binding;
-        final View view;
+        public ViewDataBinding getBinding() {
+            return binding;
+        }
+
+        protected final ViewDataBinding binding;
 
         protected ViewHolder(ViewDataBinding binding) {
             super(binding.getRoot());
-            view = binding.getRoot();
             this.binding = binding;
         }
 
         public ViewHolder(View v) {
             super(v);
-            view = v;
             this.binding = null;
         }
     }
