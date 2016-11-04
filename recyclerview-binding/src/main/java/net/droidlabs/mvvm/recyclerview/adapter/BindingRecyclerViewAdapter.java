@@ -81,11 +81,15 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
         final T item = position < items.size() ? items.get(position) : null;
         viewHolder.binding.setVariable(itemBinder.getBindingVariable(item), item);
-        View root = viewHolder.binding.getRoot();
-        root.setTag(ITEM_MODEL, item);
-        root.setOnClickListener(this);
-        root.setOnLongClickListener(this);
+        View itemView = viewHolder.binding.getRoot();
+        itemView.setTag(ITEM_MODEL, item);
+        configureItemViewHandlers(itemView, item);
         viewHolder.binding.executePendingBindings();
+    }
+
+    protected void configureItemViewHandlers(View itemView, T item) {
+        itemView.setOnClickListener(this);
+        itemView.setOnLongClickListener(this);
     }
 
     @Override
