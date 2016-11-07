@@ -79,7 +79,7 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
 
     @Override
     public void onBindViewHolder(ViewHolder viewHolder, int position) {
-        final T item = position < items.size() ? items.get(position) : null;
+        final T item = position < items.size() ? items.get(adapterPositionToListPosition(position)) : null;
         viewHolder.binding.setVariable(itemBinder.getBindingVariable(item), item);
         View itemView = viewHolder.binding.getRoot();
         itemView.setTag(ITEM_MODEL, item);
@@ -94,12 +94,12 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
 
     @Override
     public int getItemViewType(int position) {
-        return itemBinder.getLayoutRes(items.get(position));
+        return itemBinder.getLayoutRes(items.get(listPositionToAdapterPosition(position)));
     }
 
     @Override
     public int getItemCount() {
-        return items == null ? 0 : items.size();
+        return items == null ? 0 : listPositionToAdapterPosition(items.size());
     }
 
     @Override
@@ -138,6 +138,41 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
         }
     }
 
+    // return true if data should NOT be displayed
+    protected boolean filter(T data) {
+        return false;
+    }
+
+    private int listPositionToAdapterPosition(int listPosition) {
+        int res = 0;
+        for (int i = 0; i < listPosition; i++) {
+            T item = items.get(i);
+            if (filter(item) == false) {
+                res ++;
+            }
+        }
+        return res;
+    }
+
+    int adapterPositionToListPosition(int adapterPosition) {
+        int i = 0;
+        for (int res = -1; i < items.size(); i++) {
+            T item = items.get(i);
+            if (filter(item)) {
+                continue;
+            }
+            if (++res >= adapterPosition) {
+                break;
+            }
+        }
+
+        int adapt = listPositionToAdapterPosition(i);
+        if (adapterPosition != adapt) {
+            throw  new RuntimeException("learn to code:" + adapterPosition + " != " + adapt);
+        }
+        return i;
+    }
+
     private static class WeakReferenceOnListChangedCallback<T> extends ObservableList.OnListChangedCallback {
 
         private final WeakReference<BindingRecyclerViewAdapter<T>> adapterReference;
@@ -154,11 +189,27 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
             }
         }
 
+        private int adapterPositionToListPosition(int adapterPosition) {
+            BindingRecyclerViewAdapter adapter = adapterReference.get();
+            if (adapter != null) {
+                return adapter.adapterPositionToListPosition(adapterPosition);
+            }
+            return adapterPosition;
+        }
+
+        private int listPositionToAdapterPosition(int adapterPosition) {
+            BindingRecyclerViewAdapter adapter = adapterReference.get();
+            if (adapter != null) {
+                return adapter.listPositionToAdapterPosition(adapterPosition);
+            }
+            return adapterPosition;
+        }
+
         @Override
         public void onItemRangeChanged(ObservableList sender, int positionStart, int itemCount) {
             RecyclerView.Adapter adapter = adapterReference.get();
             if (adapter != null) {
-                adapter.notifyItemRangeChanged(positionStart, itemCount);
+                adapter.notifyItemRangeChanged(listPositionToAdapterPosition(positionStart), itemCount);
             }
         }
 
@@ -166,7 +217,7 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
         public void onItemRangeInserted(ObservableList sender, int positionStart, int itemCount) {
             RecyclerView.Adapter adapter = adapterReference.get();
             if (adapter != null) {
-                adapter.notifyItemRangeInserted(positionStart, itemCount);
+                adapter.notifyItemRangeInserted(listPositionToAdapterPosition(positionStart), itemCount);
             }
         }
 
@@ -174,7 +225,7 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
         public void onItemRangeMoved(ObservableList sender, int fromPosition, int toPosition, int itemCount) {
             RecyclerView.Adapter adapter = adapterReference.get();
             if (adapter != null) {
-                adapter.notifyItemMoved(fromPosition, toPosition);
+                adapter.notifyItemMoved(listPositionToAdapterPosition(fromPosition), listPositionToAdapterPosition(toPosition));
             }
         }
 
@@ -182,7 +233,7 @@ public class BindingRecyclerViewAdapter<T> extends RecyclerView.Adapter<BindingR
         public void onItemRangeRemoved(ObservableList sender, int positionStart, int itemCount) {
             RecyclerView.Adapter adapter = adapterReference.get();
             if (adapter != null) {
-                adapter.notifyItemRangeRemoved(positionStart, itemCount);
+                adapter.notifyItemRangeRemoved(listPositionToAdapterPosition(positionStart), itemCount);
             }
         }
     }
